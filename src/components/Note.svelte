@@ -56,7 +56,11 @@
 </script>
 
 <div class="relative p-6 rounded-lg w-60 h-80 border border-gray-600 group overflow-hidden pb-6">
-	<a href="note/{note.id}" class="line-clamp-10">{note.content}</a>
+	<a href="note/{note.id}">
+		<p class="line-clamp-10 whitespace-pre-wrap">
+			{note.content}
+		</p>
+	</a>
 	<button
 		on:click={onDelete}
 		class="absolute top-5 right-5 text-gray-300 hidden group-hover:block group-hover:text-gray-500 transition-colors duration-800"

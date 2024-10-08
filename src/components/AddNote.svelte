@@ -49,7 +49,7 @@
 
 <textarea
 	id="auto-grow-textarea"
-	class="w-[500px] p-4 bg-transparent border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
+	class="w-[800px] p-4 bg-transparent border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
 	rows="4"
 	bind:value={noteText}
 	placeholder="Write a note..."

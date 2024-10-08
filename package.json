@@ -12,6 +12,8 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@auth/core": "^0.36.0",
+    "@auth/sveltekit": "^1.6.0",
     "@skeletonlabs/skeleton": "2.10.2",
     "@skeletonlabs/tw-plugin": "0.4.0",
     "@sveltejs/adapter-auto": "^3.0.0",
@@ -39,9 +41,13 @@
   },
   "type": "module",
   "dependencies": {
+    "@auth/typeorm-adapter": "^2.6.0",
     "@floating-ui/dom": "1.6.11",
     "@iconify/svelte": "^4.0.2",
     "fuse.js": "^7.0.0",
-    "svelte-persisted-store": "^0.11.0"
+    "pg": "^8.13.0",
+    "reflect-metadata": "^0.2.2",
+    "svelte-persisted-store": "^0.11.0",
+    "typeorm": "^0.3.20"
   }
 }

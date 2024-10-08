@@ -38,41 +38,37 @@
 </script>
 
 <!-- Modal Backdrop with Blur Effect -->
-<div
-	class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex justify-center items-center z-50"
->
+<div class="fixed inset-0 container h-full mx-auto flex justify-center items-center z-50">
 	<!-- Modal Content -->
 	<div
-		class="bg-white w-3/4 md:w-1/2 p-6 rounded-lg shadow-lg relative max-h-[80vh] overflow-y-auto"
+		class="border border-gray-600 w-3/4 md:w-1/2 p-[40px] rounded-lg relative max-h-[80vh] overflow-y-auto"
 	>
 		{#if selectedNote}
 			<!-- Back Icon (Top Left) -->
-			<button class="absolute top-2 left-2 text-gray-500 hover:text-gray-700" on:click={closeModal}>
+			<button class="absolute top-5 left-5 text-gray-500 hover:text-gray-700" on:click={closeModal}>
 				<!-- Back icon (you can replace with an actual icon if you have an icon library) -->
 				&#x2190;
 			</button>
 
 			<!-- Delete Icon (Top Right) -->
-			<button class="absolute top-2 right-2 text-red-500 hover:text-red-700" on:click={deleteNote}>
+			<button class="absolute top-5 right-5 text-red-500 hover:text-red-700" on:click={deleteNote}>
 				<!-- Delete icon (replace with your preferred icon) -->
 				<Icon icon="mage:trash-2" font-size="20px" />
 			</button>
 
 			<!-- Note Content -->
 			<h1 class="text-2xl font-bold mb-4">{selectedNote.title}</h1>
-			<p class="text-gray-700 mb-8">{selectedNote.content}</p>
+			<p class="text-white-700 mb-8 whitespace-pre-wrap">{selectedNote.content}</p>
 
 			<!-- Favorite and Archive Icons (Bottom Right) -->
-			<div class="absolute bottom-2 right-2 flex space-x-4">
+			<!-- <div class="flex ml-[auto] space-x-4">
 				<button class="text-yellow-500 hover:text-yellow-700" on:click={toggleFavorite}>
-					<!-- Favorite icon (replace with your preferred icon) -->
 					<Icon
 						icon={selectedNote.isFavorite ? 'ph:heart-fill' : 'ph:heart-light'}
 						font-size="20px"
 					/>
 				</button>
 				<button class="text-blue-500 hover:text-blue-700" on:click={toggleArchive}>
-					<!-- Archive icon (replace with your preferred icon) -->
 					<Icon
 						icon={selectedNote.isArchived
 							? 'material-symbols-light:archive'
@@ -80,11 +76,11 @@
 						font-size="20px"
 					/>
 				</button>
-			</div>
+			</div> -->
 		{:else}
 			<!-- Not Found Content -->
 			<div class="flex justify-center items-center h-[70vh]">
-				<h1 class="text-4xl font-bold text-gray-600 text-center">
+				<h1 class="text-4xl font-bold text-white-600 text-center">
 					Oops, looks like what you're looking for doesn't exist.
 				</h1>
 			</div>

@@ -8,6 +8,7 @@
 
 	import Icon from '@iconify/svelte';
 	import type { NoteItem } from '../store/notes';
+	import Navbar from '../components/Navbar.svelte';
 
 	let fuse: any = null; // Fuse.js instance
 
@@ -96,8 +97,10 @@
 
 <!-- YOU CAN DELETE EVERYTHING IN THIS PAGE -->
 
-<div class="container h-full mx-auto">
-	<div class="px-4 py-4">
+<div class="h-full w-full">
+	<Navbar />
+
+	<div class="container mx-auto px-4 py-4">
 		<div>
 			<AddNote />
 		</div>
