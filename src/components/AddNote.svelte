@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { notes } from '../store/'; // Import the notes store
+	import { notes, syncNotes } from '../store/'; // Import the notes store
 	import { NoteItem } from '../store/notes';
 
 	let noteText = '';
 
-	const handleAddNote = () => {
+	const handleAddNote = async () => {
 		const tempId = Date.now().toString(); // Generate a temporary ID
 
 		const noteInstance = new NoteItem({
@@ -22,10 +22,19 @@
 			// Make an API call to save the note in DB
 			// ? On Success replace the temporary ID with the saved ID
 			// notes.update(existingNotes => existingNotes.map(n => n.id === note.id ? { ...n, id: savedNote.id } : n));
+
+			await fetch('/note', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ title: noteInstance.title, content: noteInstance.content })
+			});
 		} catch (error: any) {
+			console.error('error while adding note ->', error);
 			// ? On Error, remove the note from the store
 			// notes.update(existingNotes => existingNotes.filter(n => n.id !== note.id)); // Remove the note on failure
 			// console.error('error while adding note ->', error)
+		} finally {
+			syncNotes();
 		}
 	};
 

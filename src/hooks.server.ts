@@ -7,7 +7,16 @@ import {
 	AUTH_TYPEORM_CONNECTION
 } from '$env/static/private';
 import { TypeORMAdapter } from '@auth/typeorm-adapter';
-import { AccountEntity, SessionEntity, UserEntity, VerificationTokenEntity } from '$lib/entities/';
+import { UserEntity } from '$lib/database/entities';
+import { AppDataSource } from '$lib/database/data-source';
+
+AppDataSource.initialize()
+	.then(() => {
+		console.log('Data Source has been initialized!');
+	})
+	.catch((error) => {
+		console.error('Error during Data Source initialization:', error);
+	});
 
 export const { handle } = SvelteKitAuth({
 	adapter: TypeORMAdapter({
@@ -15,13 +24,14 @@ export const { handle } = SvelteKitAuth({
 		url: AUTH_TYPEORM_CONNECTION,
 		synchronize: true, // Set to false in production and use migrations
 		logging: true,
-		entities: [UserEntity, AccountEntity, SessionEntity, VerificationTokenEntity]
+		// entities: [UserEntity, AccountEntity, SessionEntity, VerificationTokenEntity]
+		entities: ['src/lib/database/entities/*.entity.{js,ts}']
 	}),
 	providers: [
 		GoogleProvider({
 			clientId: GOOGLE_CLIENT_ID,
 			clientSecret: GOOGLE_CLIENT_SECRET,
-
+			allowDangerousEmailAccountLinking: true,
 			authorization: {
 				params: {
 					prompt: 'consent',
@@ -31,5 +41,32 @@ export const { handle } = SvelteKitAuth({
 			}
 		})
 	],
-	callbacks: {}
+	callbacks: {
+		async signIn({ profile }) {
+			console.log('🚀 ~ signIn ~ profile:', profile);
+			if (!profile) throw new Error('No profile found');
+
+			const userRepository = AppDataSource.getRepository(UserEntity);
+			let user = await userRepository.findOneBy({ email: profile.email! });
+
+			if (!user) {
+				user = new UserEntity();
+				user.email = profile.email!;
+				user.name = profile.name!;
+				user.image = profile.picture;
+				await userRepository.save(user);
+			}
+
+			return true;
+		},
+		async jwt({ token, user }) {
+			if (user) {
+				token.id = user.id;
+			}
+			return token;
+		},
+		async session({ session }) {
+			return session;
+		}
+	}
 });

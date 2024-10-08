@@ -1,14 +1,14 @@
 // src/lib/entities.ts
 import { transformer } from '$lib/transformers/dateAndBigInt.transformer';
-import { Entity, PrimaryGeneratedColumn, Column, Unique, BaseEntity, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 import { SessionEntity, AccountEntity } from '.';
+import { NoteEntity } from './note.entity';
 
 @Entity({ name: 'users' })
-@Unique(['email'])
-class UserEntity extends BaseEntity {
-	@PrimaryGeneratedColumn()
-	id!: number;
+class UserEntity {
+	@PrimaryGeneratedColumn('uuid')
+	id!: string;
 
 	@Column({ type: 'varchar', nullable: true })
 	name!: string | null;
@@ -27,6 +27,9 @@ class UserEntity extends BaseEntity {
 
 	@OneToMany(() => AccountEntity, (account) => account.userId)
 	accounts!: AccountEntity[];
+
+	@OneToMany(() => NoteEntity, (note) => note.user)
+	notes!: NoteEntity[];
 }
 
 export { UserEntity };

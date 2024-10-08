@@ -1,12 +1,12 @@
 <!-- Note.svelte -->
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import type { NoteItem } from '../store/notes';
-	import { notes, searchTerm } from '../store';
+	import { NoteItem } from '../store/notes';
+	import { notes, searchTerm, syncNotes } from '../store';
 
 	export let note: NoteItem;
 
-	const onDelete = () => {
+	const onDelete = async () => {
 		notes.update((existingNotes) =>
 			existingNotes.filter((existingNote) => existingNote.id !== note.id)
 		);
@@ -15,43 +15,85 @@
 		try {
 			// Make an API call to delete the note from DB
 			// ? On Success, do nothing
+
+			await fetch('/note', {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ noteIds: [note.id] })
+			});
 		} catch (error: any) {
 			// ? On Error, add the note back in store
 			// notes.update(existingNotes => [...existingNotes, note]); // Remove the note on failure
-			// console.error('error while deleting note ->', error)
+			console.error('error while deleting note ->', error);
+		} finally {
+			syncNotes();
 		}
 	};
 
-	const addNoteToArchive = () => {
-		note.isArchived ? note.unarchive() : note.archive();
-		updateNote();
+	const addNoteToArchive = async () => {
+		const noteInstance = new NoteItem(note);
+
+		noteInstance.isArchived ? noteInstance.unarchive() : noteInstance.archive();
+		updateNote(noteInstance);
 
 		try {
 			// Make an API call to mark the note as archived in DB
 			// ? On Success, do nothing
+			await fetch('/note', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					id: noteInstance.id,
+					isArchived: noteInstance.isArchived
+				})
+			});
 		} catch (error: any) {
 			// ? On Error, unarchive the note back in store
 			// notes.update(existingNotes => existingNotes.map((n) => (n.id === note.id ? {...note, isArchived: false} : n)));
-			// console.error('error while archiving note ->', error)
+			console.error('error while archiving note ->', error);
+		} finally {
+			syncNotes();
 		}
 	};
 
-	const addNoteToFavorite = () => {
-		note.isFavorite ? note.removeFromFavorite() : note.markAsFavorite();
-		updateNote();
+	const addNoteToFavorite = async () => {
+		const noteInstance = new NoteItem(note);
+
+		noteInstance.isFavorite ? noteInstance.removeFromFavorite() : noteInstance.markAsFavorite();
+		updateNote(noteInstance);
 
 		try {
 			// Make an API call to mark the note as favorite in DB
 			// ? On Success, do nothing
+			await fetch('/note', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					id: noteInstance.id,
+					isFavorite: noteInstance.isFavorite
+				})
+			});
 		} catch (error: any) {
 			// ? On Error, unarchive the note back in store
 			// notes.update(existingNotes => existingNotes.map((n) => (n.id === note.id ? {...note, isFavorite: false} : n)));
-			// console.error('error while marking the note as favorite ->', error)
+			console.error('error while marking the note as favorite ->', error);
+		} finally {
+			syncNotes();
 		}
 	};
 
-	const updateNote = () => {
-		notes.update((existingNotes) => existingNotes.map((n) => (n.id === note.id ? note : n)));
+	const updateNote = (noteInstance: NoteItem) => {
+		notes.update((existingNotes) => {
+			return existingNotes.map((n) => {
+				return n.id === noteInstance.id ? noteInstance : n;
+			});
+		});
 	};
 </script>
 

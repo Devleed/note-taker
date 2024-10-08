@@ -1,3 +1,5 @@
+import type { NoteEntity } from '$lib/database/entities/note.entity';
+
 export interface SerializedNoteItem {
 	id: string;
 	authorId: string;
@@ -45,7 +47,7 @@ export class NoteItem implements Note, Favoritable, Archivable {
 	isFavorite: boolean = false;
 	isArchived: boolean = false;
 
-	constructor(noteData: Partial<SerializedNoteItem>) {
+	constructor(noteData: Partial<NoteEntity>) {
 		if (noteData.id === undefined || noteData.authorId === undefined) {
 			throw new Error('NoteItem constructor requires an id and authorId');
 		}

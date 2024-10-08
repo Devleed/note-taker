@@ -3,12 +3,14 @@
 	import Fuse from 'fuse.js';
 	import NoteList from '../components/NoteList.svelte';
 	import AddNote from '../components/AddNote.svelte';
-	import { notes, filteredNotes, searchTerm, tabSelected, Tabs } from '../store/'; // Import the notes store
+	import { notes, filteredNotes, searchTerm, tabSelected, Tabs, syncNotes } from '../store/'; // Import the notes store
 	import type { IFuseOptions } from 'fuse.js';
 
 	import Icon from '@iconify/svelte';
 	import type { NoteItem } from '../store/notes';
 	import Navbar from '../components/Navbar.svelte';
+
+	console.log('🚀 ~ notes:', $notes, $filteredNotes);
 
 	let fuse: any = null; // Fuse.js instance
 
@@ -51,7 +53,7 @@
 
 	// Reactive block to run whenever `searchTerm` changes
 	$: {
-		if (fuse && $searchTerm.trim() && $tabSelected) {
+		if (fuse && $searchTerm.trim()?.length > 2 && $tabSelected) {
 			// Explicit reference to `$searchTerm`
 			updateFilteredNotes(); // Perform search and update filtered notes when the search term changes
 		} else if (fuse) {
@@ -82,9 +84,11 @@
 	};
 
 	onMount(() => {
+		console.log('mount');
 		if (typeof window !== 'undefined') {
 			window.addEventListener('keydown', handleGlobalKeydown);
 		}
+		syncNotes();
 	});
 
 	// Clean up event listeners only in the browser
