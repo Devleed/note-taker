@@ -1,5 +1,24 @@
 import type { NoteEntity } from '$lib/database/entities/note.entity';
 
+export interface NoteUserResponse {
+	id: string;
+	image: string;
+	dateShared: string;
+	isOwner: boolean;
+	isFavorite: boolean;
+	isArchived: boolean;
+}
+
+export interface NoteItemResponse {
+	id: string;
+	title: string;
+	content: string;
+	createdAt: string;
+	updatedAt: string;
+	ownerId: string;
+	users: NoteUserResponse[];
+}
+
 export interface SerializedNoteItem {
 	id: string;
 	authorId: string;
@@ -13,7 +32,6 @@ export interface SerializedNoteItem {
 
 interface Note {
 	id: string;
-	authorId: string;
 	title: string;
 	content: string;
 	createdAt: Date;
@@ -39,7 +57,6 @@ interface Archivable {
 
 export class NoteItem implements Note, Favoritable, Archivable {
 	id: string;
-	authorId: string;
 	title: string;
 	content: string;
 	createdAt: Date;
@@ -48,16 +65,13 @@ export class NoteItem implements Note, Favoritable, Archivable {
 	isArchived: boolean = false;
 
 	constructor(noteData: Partial<NoteEntity>) {
-		if (noteData.id === undefined || noteData.authorId === undefined) {
-			throw new Error('NoteItem constructor requires an id and authorId');
+		if (noteData.id === undefined) {
+			throw new Error('NoteItem constructor requires an id and owner');
 		}
 
 		this.id = noteData.id;
-		this.authorId = noteData.authorId;
 		this.title = noteData.title || '';
 		this.content = noteData.content || '';
-		this.isFavorite = noteData.isFavorite || false;
-		this.isArchived = noteData.isArchived || false;
 		this.createdAt = noteData.createdAt ? new Date(noteData.createdAt) : new Date();
 		this.updatedAt = noteData.updatedAt ? new Date(noteData.updatedAt) : new Date();
 	}

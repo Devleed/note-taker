@@ -1,9 +1,19 @@
-// src/lib/entities.ts
-import { transformer } from '$lib/transformers/dateAndBigInt.transformer';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, type ValueTransformer } from 'typeorm';
 
 import { SessionEntity, AccountEntity } from '.';
+import { NoteUserEntity } from './noteUser.entity';
 import { NoteEntity } from './note.entity';
+
+const transformer: Record<'date' | 'bigint', ValueTransformer> = {
+	date: {
+		from: (date: string | null) => date && new Date(parseInt(date, 10)),
+		to: (date?: Date) => date?.valueOf().toString()
+	},
+	bigint: {
+		from: (bigInt: string | null) => bigInt && parseInt(bigInt, 10),
+		to: (bigInt?: number) => bigInt?.toString()
+	}
+};
 
 @Entity({ name: 'users' })
 class UserEntity {
@@ -28,8 +38,11 @@ class UserEntity {
 	@OneToMany(() => AccountEntity, (account) => account.userId)
 	accounts!: AccountEntity[];
 
-	@OneToMany(() => NoteEntity, (note) => note.user)
-	notes!: NoteEntity[];
+	@OneToMany(() => NoteUserEntity, (noteUser) => noteUser.user)
+	noteUsers!: NoteUserEntity[];
+
+	@OneToMany(() => NoteEntity, (note) => note.owner)
+	ownedNotes!: NoteEntity[];
 }
 
 export { UserEntity };

@@ -1,13 +1,11 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { NoteUserEntity } from './noteUser.entity';
 import { UserEntity } from './user.entity';
 
 @Entity({ name: 'notes' })
 export class NoteEntity {
 	@PrimaryGeneratedColumn('uuid')
 	id!: string;
-
-	@Column({ type: 'uuid' })
-	authorId!: string;
 
 	@Column({ type: 'text' })
 	title!: string;
@@ -21,12 +19,9 @@ export class NoteEntity {
 	@Column({ type: 'date', default: () => 'CURRENT_DATE' }) // Date column with default value
 	updatedAt!: Date;
 
-	@Column({ type: 'boolean', default: false })
-	isFavorite!: boolean;
+	@OneToMany(() => NoteUserEntity, (noteUser) => noteUser.note)
+	noteUsers!: NoteUserEntity[];
 
-	@Column({ type: 'boolean', default: false })
-	isArchived!: boolean;
-
-	@ManyToOne(() => UserEntity, (user) => user.notes)
-	user!: UserEntity;
+	@ManyToOne(() => UserEntity, (user) => user.ownedNotes, { onDelete: 'SET NULL' })
+	owner!: UserEntity;
 }

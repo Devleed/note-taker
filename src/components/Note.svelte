@@ -1,10 +1,10 @@
 <!-- Note.svelte -->
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { NoteItem } from '../store/notes';
+	import { NoteItem, type NoteItemResponse } from '../store/notes';
 	import { notes, searchTerm, syncNotes } from '../store';
 
-	export let note: NoteItem;
+	export let note: NoteItemResponse;
 
 	const onDelete = async () => {
 		notes.update((existingNotes) =>
@@ -33,9 +33,14 @@
 	};
 
 	const addNoteToArchive = async () => {
-		const noteInstance = new NoteItem(note);
+		const noteInstance = { ...note };
 
-		noteInstance.isArchived ? noteInstance.unarchive() : noteInstance.archive();
+		if (noteInstance.users[0].isArchived) {
+			noteInstance.users[0].isArchived = false;
+		} else {
+			noteInstance.users[0].isArchived = true;
+		}
+
 		updateNote(noteInstance);
 
 		try {
@@ -48,7 +53,7 @@
 				},
 				body: JSON.stringify({
 					id: noteInstance.id,
-					isArchived: noteInstance.isArchived
+					isArchived: noteInstance.users[0].isArchived
 				})
 			});
 		} catch (error: any) {
@@ -61,9 +66,14 @@
 	};
 
 	const addNoteToFavorite = async () => {
-		const noteInstance = new NoteItem(note);
+		const noteInstance = { ...note };
 
-		noteInstance.isFavorite ? noteInstance.removeFromFavorite() : noteInstance.markAsFavorite();
+		if (noteInstance.users[0].isFavorite) {
+			noteInstance.users[0].isFavorite = false;
+		} else {
+			noteInstance.users[0].isFavorite = true;
+		}
+
 		updateNote(noteInstance);
 
 		try {
@@ -76,7 +86,7 @@
 				},
 				body: JSON.stringify({
 					id: noteInstance.id,
-					isFavorite: noteInstance.isFavorite
+					isFavorite: noteInstance.users[0].isFavorite
 				})
 			});
 		} catch (error: any) {
@@ -88,7 +98,7 @@
 		}
 	};
 
-	const updateNote = (noteInstance: NoteItem) => {
+	const updateNote = (noteInstance: NoteItemResponse) => {
 		notes.update((existingNotes) => {
 			return existingNotes.map((n) => {
 				return n.id === noteInstance.id ? noteInstance : n;
@@ -115,7 +125,7 @@
 	>
 		<button class="" on:click={addNoteToArchive}>
 			<Icon
-				icon={note.isArchived
+				icon={note.users[0].isArchived
 					? 'material-symbols-light:archive'
 					: 'material-symbols-light:archive-outline'}
 				font-size="20px"
@@ -123,7 +133,7 @@
 		</button>
 
 		<button class="" on:click={addNoteToFavorite}>
-			<Icon icon={note.isFavorite ? 'ph:heart-fill' : 'ph:heart-light'} font-size="20px" />
+			<Icon icon={note.users[0].isFavorite ? 'ph:heart-fill' : 'ph:heart-light'} font-size="20px" />
 		</button>
 	</div>
 </div>

@@ -1,19 +1,46 @@
 import { AppDataSource } from '$lib/database/data-source';
+import { UserEntity } from '$lib/database/entities';
 import { NoteEntity } from '$lib/database/entities/note.entity';
+import { NoteUserEntity } from '$lib/database/entities/noteUser.entity.js';
 import { json } from '@sveltejs/kit';
+import type { NoteItemResponse } from '../../store/notes';
 
 export const GET = async ({ locals }) => {
-	const session = await locals.auth();
+	try {
+		const session = await locals.auth();
+		const userId = session?.user?.id;
 
-	if (!session?.user) return json({ error: 'Unauthorized' }, { status: 401 });
-
-	const notes = await AppDataSource.getRepository(NoteEntity).find({
-		where: { authorId: session.user.id },
-		order: {
-			createdAt: 'DESC'
+		if (!userId) {
+			return json({ error: 'User is not authenticated' }, { status: 401 });
 		}
-	});
-	return json(notes);
+
+		const rawQuery = `
+			SELECT n.id, n.title, n.content, n."createdAt", n."updatedAt", n."ownerId",
+			json_agg(json_build_object('id', u.id, 'image', u.image, 'dateShared', nnu."dateShared", 'isOwner', nnu."isOwner", 'isFavorite', nnu."isFavorite", 'isArchived', nnu."isArchived")
+			ORDER BY 
+				CASE WHEN u.id = $1 THEN 0 ELSE 1 END,
+				nnu."dateShared" DESC) FILTER (WHERE nnu."userId" IS NOT NULL) AS users
+			FROM notes n
+			LEFT JOIN LATERAL (
+				SELECT *
+				FROM note_users nnu
+				WHERE nnu."noteId" = n.id
+				LIMIT 5
+			) nnu ON true
+			LEFT JOIN note_users nu ON n.id = nu."noteId"
+			LEFT JOIN users u ON u.id = nnu."userId"
+			WHERE nu."userId"=$1
+			GROUP BY n.id, n."ownerId"
+			ORDER BY n."createdAt" DESC
+		`;
+
+		const allNotes: NoteItemResponse[] = await AppDataSource.query(rawQuery, [userId]);
+
+		return json(allNotes);
+	} catch (error) {
+		console.error('Error fetching notes:', error);
+		return json({ error: 'Failed to retrieve notes' }, { status: 500 });
+	}
 };
 
 export const POST = async ({ request, locals }) => {
@@ -23,13 +50,31 @@ export const POST = async ({ request, locals }) => {
 	const user = session?.user;
 	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
 
+	const userRepository = AppDataSource.getRepository(UserEntity);
+
+	const dbUser = await userRepository.findOneBy({ id: user.id });
+
+	if (!dbUser) {
+		return json({ error: 'User not found' }, { status: 404 });
+	}
+
 	const note = new NoteEntity();
 	note.title = title;
 	note.content = content;
-	note.authorId = user.id!;
+	note.owner = dbUser;
 
-	await AppDataSource.getRepository(NoteEntity).save(note);
-	return json(note);
+	const savedNote = await AppDataSource.getRepository(NoteEntity).save(note);
+
+	const noteUser = new NoteUserEntity();
+	noteUser.note = savedNote;
+	noteUser.user = dbUser;
+	noteUser.isFavorite = false;
+	noteUser.isArchived = false;
+	noteUser.isOwner = true;
+
+	await AppDataSource.getRepository(NoteUserEntity).save(noteUser);
+
+	return json(savedNote);
 };
 
 export const DELETE = async ({ request }) => {
@@ -53,36 +98,42 @@ export const DELETE = async ({ request }) => {
 	}
 };
 
-export const PUT = async ({ request }) => {
+export const PUT = async ({ request, locals }) => {
 	try {
-		// Parse the note ID and updated fields from the request body
 		const { id, content, isFavorite, isArchived } = await request.json();
+		const session = await locals.auth();
 
-		if (!id) {
-			return json({ error: 'Note ID is required' }, { status: 400 });
+		const user = session?.user;
+
+		if (!user) {
+			return json({ error: 'Unauthorized' }, { status: 401 });
 		}
 
-		// Access the note repository
 		const noteRepository = AppDataSource.getRepository(NoteEntity);
 
-		// Find the note by ID
 		const note = await noteRepository.findOneBy({ id });
 
 		if (!note) {
 			return json({ error: 'Note not found' }, { status: 404 });
 		}
 
-		// Update the note's fields only if they are provided in the request
+		const noteUserRepository = AppDataSource.getRepository(NoteUserEntity);
+
+		const noteUser = await noteUserRepository.findOneBy({ noteId: note.id, userId: user.id });
+
+		if (!noteUser) {
+			return json({ error: 'Note User relationship not found' }, { status: 404 });
+		}
+
 		if (content !== undefined) note.content = content;
-		if (isFavorite !== undefined) note.isFavorite = isFavorite;
-		if (isArchived !== undefined) note.isArchived = isArchived;
+		if (isFavorite !== undefined) noteUser.isFavorite = isFavorite;
+		if (isArchived !== undefined) noteUser.isArchived = isArchived;
 
-		// Save the updated note
-		const savedNote = await noteRepository.save(note);
+		await Promise.all([noteRepository.save(note), noteUserRepository.save(noteUser)]);
 
-		return json({ message: 'Note updated successfully', note: savedNote });
+		return json({ message: 'Note updated successfully', success: true });
 	} catch (error) {
 		console.error('Error updating note:', error);
-		return json({ error: 'Failed to update note' }, { status: 500 });
+		return json({ error: 'Failed to update note', success: false }, { status: 500 });
 	}
 };

@@ -7,7 +7,7 @@
 	import type { IFuseOptions } from 'fuse.js';
 
 	import Icon from '@iconify/svelte';
-	import type { NoteItem } from '../store/notes';
+	import type { NoteItem, NoteItemResponse } from '../store/notes';
 	import Navbar from '../components/Navbar.svelte';
 
 	console.log('🚀 ~ notes:', $notes, $filteredNotes);
@@ -41,7 +41,7 @@
 	function updateFilteredNotes() {
 		if ($searchTerm.trim()) {
 			type FuseResult = {
-				item: { item: NoteItem };
+				item: { item: NoteItemResponse };
 			}[];
 
 			const result: FuseResult = fuse.search($searchTerm); // Perform search on the notes
@@ -75,10 +75,10 @@
 		}
 	};
 
-	const filterNotesBasedOnTab = (notes: NoteItem[], tab: Tabs) => {
+	const filterNotesBasedOnTab = (notes: NoteItemResponse[], tab: Tabs) => {
 		return notes.filter((note) => {
-			if (tab === Tabs.Favorites) return note.isFavorite;
-			if (tab === Tabs.Archived) return note.isArchived;
+			if (tab === Tabs.Favorites) return note.users[0].isFavorite;
+			if (tab === Tabs.Archived) return note.users[0].isArchived;
 			return true;
 		});
 	};

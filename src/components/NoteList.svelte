@@ -3,8 +3,6 @@
 	import { filteredNotes, Tabs, tabSelected } from '../store/'; // Import the notes store
 	import Note from './Note.svelte';
 	import Icon from '@iconify/svelte';
-
-	console.log('🚀 ~ $filteredNotes:', $filteredNotes);
 </script>
 
 <div class="mt-[50px]">
