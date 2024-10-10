@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { notes } from '../../../store';
 	import { onMount } from 'svelte';
-	import type { NoteItem } from '../../../store/notes';
+	import type { NoteItemResponse } from '../../../store/notes';
 	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
 
 	const noteId = $page?.params?.noteId; // noteId passed from the load function
-	let selectedNote: NoteItem | null = null; // Will hold the selected note
+	let selectedNote: NoteItemResponse | null = null; // Will hold the selected note
 
 	// Fetch the note from the store after the component is rendered
 	onMount(() => {

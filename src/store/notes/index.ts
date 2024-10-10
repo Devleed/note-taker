@@ -1,4 +1,30 @@
 import type { NoteEntity } from '$lib/database/entities/note.entity';
+import type { User } from '@auth/sveltekit';
+
+export const getDefaultNoteCreation = (
+	title: string,
+	content: string,
+	user: User
+): NoteItemResponse => {
+	return {
+		content,
+		title,
+		id: Date.now().toString(),
+		createdAt: new Date().toISOString(),
+		updatedAt: new Date().toISOString(),
+		ownerId: user.id!,
+		users: [
+			{
+				dateShared: new Date().toISOString(),
+				id: user.id!,
+				image: user.image || '',
+				isArchived: false,
+				isFavorite: false,
+				isOwner: true
+			}
+		]
+	};
+};
 
 export interface NoteUserResponse {
 	id: string;

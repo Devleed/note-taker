@@ -77,19 +77,37 @@ export const POST = async ({ request, locals }) => {
 	return json(savedNote);
 };
 
-export const DELETE = async ({ request }) => {
+export const DELETE = async ({ request, locals }) => {
 	try {
-		const { noteIds } = await request.json();
+		const session = await locals.auth();
+		const userId = session?.user?.id;
 
-		if (!noteIds || !Array.isArray(noteIds) || noteIds.length === 0) {
-			return json({ error: 'Invalid or missing noteIds array' }, { status: 400 });
+		if (!userId) {
+			return json({ error: 'User is not authenticated' }, { status: 401 });
 		}
 
-		// Access the note repository
-		const noteRepository = AppDataSource.getRepository(NoteEntity);
+		const { noteId } = await request.json();
 
-		// Delete notes by IDs
-		await noteRepository.delete(noteIds);
+		const noteRepository = AppDataSource.getRepository(NoteEntity);
+		const noteUserRepository = AppDataSource.getRepository(NoteUserEntity);
+
+		const noteUser = await noteUserRepository.findOneBy({ noteId, userId });
+
+		if (!noteUser) {
+			return json({ error: 'Note User relationship not found' }, { status: 404 });
+		}
+
+		if (noteUser?.isOwner) {
+			// Delete the note and all shared copies
+			await noteUserRepository.delete({ noteId });
+			await noteRepository.delete({ id: noteId });
+		} else {
+			// Delete the shared copy
+			await noteUserRepository.delete({
+				noteId,
+				userId
+			});
+		}
 
 		return json({ message: 'Selected notes deleted successfully' });
 	} catch (error) {

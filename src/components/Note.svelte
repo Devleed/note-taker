@@ -21,7 +21,7 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ noteIds: [note.id] })
+				body: JSON.stringify({ noteId: note.id })
 			});
 		} catch (error: any) {
 			// ? On Error, add the note back in store
@@ -107,7 +107,11 @@
 	};
 </script>
 
-<div class="relative p-6 rounded-lg w-60 h-80 border border-gray-600 group overflow-hidden pb-6">
+<div
+	class="relative p-6 rounded-lg w-60 h-80 border border-{note.users[0].isOwner
+		? 'red'
+		: 'gray'}-600 group overflow-hidden pb-6"
+>
 	<a href="note/{note.id}">
 		<p class="line-clamp-10 whitespace-pre-wrap">
 			{note.content}

@@ -1,21 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	import { notes, syncNotes } from '../store/'; // Import the notes store
-	import { NoteItem } from '../store/notes';
+	import { getDefaultNoteCreation, NoteItem, type NoteItemResponse } from '../store/notes';
 
 	let noteText = '';
 
+	const user = $page.data.session?.user;
+
 	const handleAddNote = async () => {
-		const tempId = Date.now().toString(); // Generate a temporary ID
+		const noteToCreate: NoteItemResponse = getDefaultNoteCreation('', noteText, user!);
 
-		const noteInstance = new NoteItem({
-			id: tempId,
-			authorId: 'waleed',
-			title: '',
-			content: noteText
-		});
-
-		notes.update((existingNotes) => [...existingNotes, noteInstance]); // Update the notes store with a new note
+		notes.update((existingNotes) => [...existingNotes, noteToCreate]); // Update the notes store with a new note
 		noteText = ''; // Reset input
 
 		try {
@@ -26,7 +22,7 @@
 			await fetch('/note', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ title: noteInstance.title, content: noteInstance.content })
+				body: JSON.stringify({ title: noteToCreate.title, content: noteToCreate.content })
 			});
 		} catch (error: any) {
 			console.error('error while adding note ->', error);
