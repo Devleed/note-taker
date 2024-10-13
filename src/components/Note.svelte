@@ -3,8 +3,47 @@
 	import Icon from '@iconify/svelte';
 	import { NoteItem, type NoteItemResponse } from '../store/notes';
 	import { notes, searchTerm, syncNotes } from '../store';
+	import ShareNoteToEmailsModal from './ShareNoteToEmailsModal.svelte';
 
 	export let note: NoteItemResponse;
+	let showModal = false;
+	let isEditing = false;
+	let editedContent = note.content;
+
+	const saveContent = async () => {
+		isEditing = false;
+
+		const noteInstance = { ...note };
+
+		if (noteInstance.content === editedContent) {
+			return;
+		}
+
+		noteInstance.content = editedContent;
+
+		updateNote(noteInstance);
+
+		try {
+			// Make an API call to update the note in DB
+			// ? On Success, do nothing
+			await fetch('/note', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					id: noteInstance.id,
+					content: editedContent
+				})
+			});
+		} catch (error) {
+			console.error('error while updating note content ->', error);
+		} finally {
+			syncNotes();
+		}
+
+		// note.content = editedContent;
+	};
 
 	const onDelete = async () => {
 		notes.update((existingNotes) =>
@@ -105,42 +144,94 @@
 			});
 		});
 	};
+
+	// Function to open the modal
+	const openModal = () => {
+		showModal = true;
+	};
+	const closeModal = () => {
+		showModal = false;
+	};
 </script>
 
 <div
-	class="relative p-6 rounded-lg w-60 h-80 border border-{note.users[0].isOwner
+	class="relative p-6 rounded-lg w-80 h-[25rem] border border-{note.users[0].isOwner
 		? 'red'
-		: 'gray'}-600 group overflow-hidden pb-6"
+		: 'gray'}-600 group overflow-visible"
 >
-	<a href="note/{note.id}">
-		<p class="line-clamp-10 whitespace-pre-wrap">
-			{note.content}
-		</p>
-	</a>
+	<div class="w-[95%] h-[85%] overflow-y-scroll scrollbar-hide">
+		<!-- Editable textarea for multiline input with whitespace-preserving styles -->
+		<textarea
+			bind:value={editedContent}
+			class="w-full h-full scrollbar-hide p-[0px] border-none resize-none bg-transparent"
+			on:blur={saveContent}
+			style="border:none; outline:none box-shadow:none;"
+		></textarea>
+	</div>
+
 	<button
 		on:click={onDelete}
 		class="absolute top-5 right-5 text-gray-300 hidden group-hover:block group-hover:text-gray-500 transition-colors duration-800"
 	>
-		<Icon icon="mage:trash-2" font-size="20px" />
+		{#if note.users[0].isOwner}
+			<Icon icon="mage:trash-2" font-size="20px" />
+		{:else}
+			<Icon icon="bx:unlink" font-size="20px" />
+		{/if}
 	</button>
 
 	<div
-		class="absolute bottom-5 right-5 text-gray-300 hidden group-hover:block group-hover:text-gray-500 transition-colors duration-800 flex flex-row align-center"
+		class="w-[87%] hidden flex flex-row align-center absolute bottom-8 right-5 group-hover:flex duration-800"
 	>
-		<button class="" on:click={addNoteToArchive}>
-			<Icon
-				icon={note.users[0].isArchived
-					? 'material-symbols-light:archive'
-					: 'material-symbols-light:archive-outline'}
-				font-size="20px"
-			/>
-		</button>
+		<div class="text-gray-500" style="margin-right: auto; font-size: 14px;">
+			{new Date(note.updatedAt).toDateString()}
+		</div>
+		<div class="text-gray-500 flex flex-row align-center">
+			<button class="" on:click={addNoteToArchive}>
+				<Icon
+					icon={note.users[0].isArchived
+						? 'material-symbols-light:archive'
+						: 'material-symbols-light:archive-outline'}
+					font-size="20px"
+				/>
+			</button>
 
-		<button class="" on:click={addNoteToFavorite}>
-			<Icon icon={note.users[0].isFavorite ? 'ph:heart-fill' : 'ph:heart-light'} font-size="20px" />
-		</button>
+			<button class="" on:click={addNoteToFavorite}>
+				<Icon
+					icon={note.users[0].isFavorite ? 'ph:heart-fill' : 'ph:heart-light'}
+					font-size="20px"
+				/>
+			</button>
+
+			{#if note.users[0].isOwner}
+				<button class="" on:click={openModal}>
+					<Icon icon="bitcoin-icons:share-outline" font-size="20px" />
+				</button>
+			{/if}
+		</div>
 	</div>
+
+	<ShareNoteToEmailsModal noteId={note.id} {showModal} on:close={closeModal} />
+
+	{#if note.users.length > 1}
+		<div
+			class="absolute flex flex-row items-center bottom-[-20px] right-0 h-[40px] p-2 mr-[5px] shared-users-container"
+		>
+			{#each note.users as user, index}
+				{#if index !== 0}
+					<img
+						src={user.image}
+						alt={user.id.slice(0, 2)}
+						class="w-8 h-8 rounded-full object-cover {index > 1 ? '-ml-2' : ''}"
+					/>
+				{/if}
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style>
+	.shared-users-container {
+		background-color: rgb(var(--color-surface-900));
+	}
 </style>

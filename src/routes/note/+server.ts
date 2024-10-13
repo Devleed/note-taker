@@ -143,7 +143,10 @@ export const PUT = async ({ request, locals }) => {
 			return json({ error: 'Note User relationship not found' }, { status: 404 });
 		}
 
-		if (content !== undefined) note.content = content;
+		if (content !== undefined) {
+			note.content = content;
+			note.updatedAt = new Date();
+		}
 		if (isFavorite !== undefined) noteUser.isFavorite = isFavorite;
 		if (isArchived !== undefined) noteUser.isArchived = isArchived;
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { join } from 'path';
 import type { Config } from 'tailwindcss';
 import typography from '@tailwindcss/typography';
@@ -19,6 +20,7 @@ export default {
 		}
 	},
 	plugins: [
+		require('tailwind-scrollbar-hide'),
 		typography,
 		forms,
 		skeleton({

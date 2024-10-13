@@ -13,10 +13,10 @@ export class NoteEntity {
 	@Column({ type: 'text' })
 	content!: string;
 
-	@Column({ type: 'date', default: () => 'CURRENT_DATE' }) // Date column with default value
+	@Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' }) // Date column with default value
 	createdAt!: Date;
 
-	@Column({ type: 'date', default: () => 'CURRENT_DATE' }) // Date column with default value
+	@Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' }) // Date column with default value
 	updatedAt!: Date;
 
 	@OneToMany(() => NoteUserEntity, (noteUser) => noteUser.note)
