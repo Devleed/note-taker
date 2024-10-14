@@ -14,6 +14,10 @@
 		notes.update((existingNotes) => [...existingNotes, noteToCreate]); // Update the notes store with a new note
 		noteText = ''; // Reset input
 
+		const textarea = document.getElementById('add-note-content-input') as HTMLTextAreaElement;
+
+		textarea.style.height = 'auto'; // Reset height
+
 		try {
 			// Make an API call to save the note in DB
 			// ? On Success replace the temporary ID with the saved ID
@@ -42,10 +46,15 @@
 	};
 
 	onMount(() => {
-		const textarea = document.getElementById('auto-grow-textarea') as HTMLTextAreaElement;
+		const textarea = document.getElementById('add-note-content-input') as HTMLTextAreaElement;
 
 		// Adjust height dynamically based on content
 		textarea?.addEventListener('input', function () {
+			if (this.scrollHeight > 400) {
+				this.style.overflow = 'auto';
+				return;
+			}
+
 			this.style.height = 'auto'; // Reset height
 			this.style.height = `${this.scrollHeight}px`; // Adjust height based on scrollHeight
 		});
@@ -53,7 +62,7 @@
 </script>
 
 <textarea
-	id="auto-grow-textarea"
+	id="add-note-content-input"
 	class="w-[800px] p-4 bg-transparent border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
 	rows="4"
 	bind:value={noteText}

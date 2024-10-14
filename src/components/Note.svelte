@@ -4,15 +4,14 @@
 	import { NoteItem, type NoteItemResponse } from '../store/notes';
 	import { notes, searchTerm, syncNotes } from '../store';
 	import ShareNoteToEmailsModal from './ShareNoteToEmailsModal.svelte';
+	import NoteOptionsDrawer from './NoteOptionsDrawer.svelte';
 
 	export let note: NoteItemResponse;
-	let showModal = false;
-	let isEditing = false;
+	let showShareModal = false;
+	let showOptionsDrawer = false;
 	let editedContent = note.content;
 
 	const saveContent = async () => {
-		isEditing = false;
-
 		const noteInstance = { ...note };
 
 		if (noteInstance.content === editedContent) {
@@ -69,6 +68,13 @@
 		} finally {
 			syncNotes();
 		}
+	};
+
+	const openOptionsDrawer = () => {
+		showOptionsDrawer = true;
+	};
+	const closeOptionsDrawer = () => {
+		showOptionsDrawer = false;
 	};
 
 	const addNoteToArchive = async () => {
@@ -146,19 +152,23 @@
 	};
 
 	// Function to open the modal
-	const openModal = () => {
-		showModal = true;
+	const openShareModal = () => {
+		showShareModal = true;
 	};
-	const closeModal = () => {
-		showModal = false;
+	const closeShareModal = () => {
+		showShareModal = false;
 	};
 </script>
 
+<NoteOptionsDrawer {note} showDrawer={showOptionsDrawer} on:close={closeOptionsDrawer} />
+<ShareNoteToEmailsModal noteId={note.id} showModal={showShareModal} on:close={closeShareModal} />
 <div
 	class="relative p-6 rounded-lg w-80 h-[25rem] border border-{note.users[0].isOwner
 		? 'red'
 		: 'gray'}-600 group overflow-visible"
 >
+	<div class="gradient w-[85%] h-[80px]"></div>
+
 	<div class="w-[95%] h-[85%] overflow-y-scroll scrollbar-hide">
 		<!-- Editable textarea for multiline input with whitespace-preserving styles -->
 		<textarea
@@ -170,14 +180,15 @@
 	</div>
 
 	<button
-		on:click={onDelete}
+		on:click={openOptionsDrawer}
 		class="absolute top-5 right-5 text-gray-300 hidden group-hover:block group-hover:text-gray-500 transition-colors duration-800"
 	>
-		{#if note.users[0].isOwner}
+		<!-- {#if note.users[0].isOwner}
 			<Icon icon="mage:trash-2" font-size="20px" />
 		{:else}
 			<Icon icon="bx:unlink" font-size="20px" />
-		{/if}
+		{/if} -->
+		<Icon icon="mi:options-vertical" font-size="20px" />
 	</button>
 
 	<div
@@ -187,6 +198,10 @@
 			{new Date(note.updatedAt).toDateString()}
 		</div>
 		<div class="text-gray-500 flex flex-row align-center">
+			<a href="/note/{note.id}" target="_blank" style="margin-top: 2px;">
+				<Icon icon="mdi:eye-outline" font-size="20px" />
+			</a>
+
 			<button class="" on:click={addNoteToArchive}>
 				<Icon
 					icon={note.users[0].isArchived
@@ -204,14 +219,12 @@
 			</button>
 
 			{#if note.users[0].isOwner}
-				<button class="" on:click={openModal}>
+				<button class="" on:click={openShareModal}>
 					<Icon icon="bitcoin-icons:share-outline" font-size="20px" />
 				</button>
 			{/if}
 		</div>
 	</div>
-
-	<ShareNoteToEmailsModal noteId={note.id} {showModal} on:close={closeModal} />
 
 	{#if note.users.length > 1}
 		<div
@@ -233,5 +246,12 @@
 <style>
 	.shared-users-container {
 		background-color: rgb(var(--color-surface-900));
+	}
+
+	.gradient {
+		/* background: linear-gradient(rgba(0, 0, 0, 0) 0%, rgba(var(--color-surface-900), 1) 100%); */
+		background: linear-gradient(transparent, rgb(var(--color-surface-900)));
+		position: absolute;
+		bottom: 70px;
 	}
 </style>

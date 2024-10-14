@@ -24,7 +24,6 @@ export const { handle } = SvelteKitAuth({
 		url: AUTH_TYPEORM_CONNECTION,
 		synchronize: true, // Set to false in production and use migrations
 		logging: true,
-		// entities: [UserEntity, AccountEntity, SessionEntity, VerificationTokenEntity]
 		entities: ['src/lib/database/entities/*.entity.{js,ts}']
 	}),
 	providers: [
